@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/Logger"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("LOGGER_DATABASE_URL")
+}
+
+type CommandsAuthor {
+  accent_color  String?
+  avatar        String?
+  banner        String?
+  bot           Boolean?
+  discriminator String?
+  id            String
+  public_flags  BigInt?
+  tag           String?
+  username      String?
+}
+
+type CommandsCommand {
+  args           String[]
+  guild_id       String?
+  id             String?
+  isSlashCommand Boolean?
+  name           String
+  /// Could not determine type: the field only had null or empty values in the sample set.
+  options        CommandDataOption[]
+  /// Nested objects had no data in the sample dataset to introspect a nested type.
+  resolved       Json?
+  target_id      String?
+  type           BigInt?
+}
+
+type CommandDataOption {
+  name           String
+  values         Json?
+  kind           String
+  options        CommandDataOption[]
+  resolved       Json?
+  focused        Boolean
+}
+
+model commands {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  author  CommandsAuthor?
+  command CommandsCommand
+  logType String?
+  message String?
+  time    DateTime @db.Date
+  type    String?
+}
+
+model LoggerDefault {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+}

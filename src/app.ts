@@ -1,5 +1,7 @@
 import express, { Application, urlencoded } from 'express';
 
+import GeneralConfigRoute from './routes/GeneralConfigRoutes';
+
 class App {
   readonly app: Application;
 
@@ -15,7 +17,7 @@ class App {
   }
 
   private routes(): void {
-    //TODO
+    this.app.use('/GeneralConfig/', GeneralConfigRoute);
   }
 }
 
