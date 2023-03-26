@@ -1,6 +1,6 @@
 import express, { Application, urlencoded } from 'express';
-
-import GeneralConfigRoute from './routes/GeneralConfigRoutes';
+import * as dotenv from 'dotenv';
+import ConfigRoutes from './routes/config/';
 
 class App {
   readonly app: Application;
@@ -17,8 +17,14 @@ class App {
   }
 
   private routes(): void {
-    this.app.use('/GeneralConfig/', GeneralConfigRoute);
+    this.app.use('/config/', ConfigRoutes);
   }
 }
 
-export default new App().app;
+dotenv.config({ path: '../config/api.env' });
+
+const app = new App().app;
+
+app.listen(8081, () => {
+  console.log('Escutando');
+});

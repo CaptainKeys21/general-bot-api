@@ -1,45 +1,35 @@
 import { Request, Response } from 'express';
-import { Prisma } from '../../prisma/generated/GeneralBot';
-import GeneralBot from '../models/GeneralBot';
+import GeneralConfigModel from '../models/GeneralConfig';
 
 type QueryParams = {
-  type: string | undefined;
-  name: string | undefined;
+  name?: string;
+  keyname?: boolean;
 };
 
 interface BodyCreateParams extends BodyupdateParams {
   name: string;
-  config_type: string;
 }
 
 interface BodyupdateParams {
   data?: string;
-  group?: string;
-  allowed?: {
-    roles: Array<string>;
-    users: Array<string>;
-  };
 }
 
 class GeneralConfig {
   async index(
-    req: Request<unknown, unknown, unknown, QueryParams>,
+    req: Request<unknown, unknown, BodyupdateParams, QueryParams>,
     res: Response
   ): Promise<Response> {
     try {
-      const { name, type } = req.query;
-
-      const data = await GeneralBot.config.findMany({
-        where: { config_type: type, name },
-      });
-
-      return res.status(200).json({ msg: 'ok', data });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        return res.status(500).json({ msg: e.message });
+      if (!req.query.name) {
+        const data = await GeneralConfigModel.findAll(req.query.keyname);
+        return res.status(200).json({ msg: 'ok', data });
+      } else {
+        const data = await GeneralConfigModel.findOne(req.query.name);
+        return res.status(200).json({ msg: 'ok', data });
       }
+    } catch (e) {
       console.log(e);
-      return res.status(500).json({ msg: 'Unknown server error' });
+      return res.status(500).json({ msg: 'Internal server error' });
     }
   }
 
@@ -48,17 +38,17 @@ class GeneralConfig {
     res: Response
   ): Promise<Response> {
     try {
-      const data = req.body;
+      const data = {
+        ...req.body,
+        config_type: 'general',
+      };
 
-      const response = await GeneralBot.config.create({ data });
+      const response = await GeneralConfigModel.insertOne(data);
 
       return res.status(201).json({ msg: 'created', data: response });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        return res.status(500).json({ msg: e.message });
-      }
       console.log(e);
-      return res.status(500).json({ msg: 'Unknown server error' });
+      return res.status(500).json({ msg: 'Internal server error' });
     }
   }
 
@@ -67,28 +57,17 @@ class GeneralConfig {
     res: Response
   ): Promise<Response> {
     try {
-      const data = req.body;
-      const query = req.query;
+      const { data } = req.body;
+      const { name } = req.query;
 
-      if (!query.name || !query.type) {
-        return res.status(400).json({ msg: 'Bad query attributes' });
+      if (!name) {
+        return res.status(400).json({ msg: 'Config name not specified' });
       }
 
-      const response = await GeneralBot.config.update({
-        data,
-        where: {
-          name_config_type: {
-            name: query.name,
-            config_type: query.type,
-          },
-        },
-      });
+      const response = await GeneralConfigModel.editOne(name, data);
 
-      return res.status(200).json({ msg: 'ok', data: response });
+      return res.status(200).json({ msg: 'ok', acknowledged: response });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        return res.status(500).json({ msg: e.message });
-      }
       console.log(e);
       return res.status(500).json({ msg: 'Unknown server error' });
     }
@@ -99,26 +78,16 @@ class GeneralConfig {
     res: Response
   ): Promise<Response> {
     try {
-      const query = req.query;
+      const { name } = req.query;
 
-      if (!query.name || !query.type) {
-        return res.status(400).json({ msg: 'Bad query attributes' });
+      if (!name) {
+        return res.status(400).json({ msg: 'Config name not specified' });
       }
 
-      const response = await GeneralBot.config.delete({
-        where: {
-          name_config_type: {
-            name: query.name,
-            config_type: query.type,
-          },
-        },
-      });
+      const response = await GeneralConfigModel.deleteOne(name);
 
-      return res.status(200).json({ msg: 'ok', data: response });
+      return res.status(200).json({ msg: 'ok', acknowledged: response });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        return res.status(500).json({ msg: e.message });
-      }
       console.log(e);
       return res.status(500).json({ msg: 'Unknown server error' });
     }
