@@ -1,26 +1,6 @@
 import { MongoClient } from 'mongodb';
 import client from '../services/database';
-
-interface ICommandAllowedIdsConfig {
-  name: string;
-  config_type: string;
-  allowed: {
-    users: string[];
-    roles: string[];
-  };
-}
-
-interface IKeynamedCAIConfig {
-  [k: string]: {
-    config_type: string;
-    allowed: IAllowedData;
-  };
-}
-
-interface IAllowedData {
-  users: string[];
-  roles: string[];
-}
+import { IAllowedData, ICommandAllowedIdsConfig, IKeynamedCAIConfig } from '../types/Config';
 
 export default class CommandAllowedIdsConfigModel {
   private static readonly dbName = 'GeneralBot';

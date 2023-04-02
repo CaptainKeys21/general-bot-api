@@ -1,15 +1,6 @@
 import { MongoClient } from 'mongodb';
 import client from '../services/database';
-
-interface IGeneralConfig {
-  name: string;
-  config_type: string;
-  data?: string;
-}
-
-interface IKeynamedGeneralConfig {
-  [k: string]: { config_type: string; data?: string | undefined };
-}
+import { IGeneralConfig, IKeynamedGeneralConfig } from '../types/Config';
 
 export default class GeneralConfigModel {
   private static readonly dbName = 'GeneralBot';
