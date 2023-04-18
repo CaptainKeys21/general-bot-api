@@ -1,6 +1,8 @@
 import { Long } from 'mongodb';
 import { IDiscordUser } from './Discord';
 
+export type AllLogs = ICommandLog | ISlashCommand;
+
 export interface ICommandLog {
   logType: string;
   author: IDiscordUser;

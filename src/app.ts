@@ -1,15 +1,17 @@
 import express, { Application, urlencoded } from 'express';
-import htpp, { createServer, IncomingMessage, ServerResponse } from 'http';
+import http, { createServer, IncomingMessage, ServerResponse } from 'http';
 import * as dotenv from 'dotenv';
+
+import { Server } from 'socket.io';
+import WebSocketServer from './services/websocketServer';
+
 import ConfigRoutes from './routes/config/';
 import MembersRoutes from './routes/members';
-import { Server } from 'socket.io';
-import { IoRequest } from './types/express';
-import WebSocketServer from './services/websocketServer';
+import LoggerRoutes from './routes/logger';
 
 class App {
   readonly app: Application;
-  readonly http: htpp.Server<typeof IncomingMessage, typeof ServerResponse>;
+  readonly http: http.Server<typeof IncomingMessage, typeof ServerResponse>;
   readonly io: Server;
 
   constructor() {
@@ -33,13 +35,14 @@ class App {
   private routes(): void {
     this.app.use('/config/', ConfigRoutes);
     this.app.use('/members/', MembersRoutes);
+    this.app.use('/logger/', LoggerRoutes);
   }
 }
 
 dotenv.config({ path: '../config/api.env' });
 
-const htppServer = new App().http;
+const httpServer = new App().http;
 
-htppServer.listen(8081, () => {
+httpServer.listen(8081, () => {
   console.log('Escutando');
 });
