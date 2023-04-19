@@ -8,6 +8,7 @@ import WebSocketServer from './services/websocketServer';
 import ConfigRoutes from './routes/config/';
 import MembersRoutes from './routes/members';
 import LoggerRoutes from './routes/logger';
+import RolesRoutes from './routes/roles';
 
 class App {
   readonly app: Application;
@@ -36,6 +37,7 @@ class App {
     this.app.use('/config/', ConfigRoutes);
     this.app.use('/members/', MembersRoutes);
     this.app.use('/logger/', LoggerRoutes);
+    this.app.use('/roles/', RolesRoutes);
   }
 }
 

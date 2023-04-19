@@ -25,3 +25,21 @@ export interface IDiscordMember {
   avatar: string | null;
   communication_disables_until: Date | null;
 }
+
+export interface IDiscordRole {
+  id: string;
+  guild_id: string;
+  color: Long;
+  hoist: boolean;
+  managed: boolean;
+  mentionable: boolean;
+  name: string;
+  permitions: string;
+  position: Long;
+  tags: {
+    bot_id: string | null;
+    integration_id: string | null;
+  };
+  icon: string | null;
+  unicode_emoji: string | null;
+}

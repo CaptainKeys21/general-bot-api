@@ -37,6 +37,7 @@ export default class Logger {
           data: facetData,
         },
       },
+      { $unwind: '$metadata' },
     ]);
 
     const data: returnFind = (await cursor.toArray())[0];

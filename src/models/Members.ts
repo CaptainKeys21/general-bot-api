@@ -20,9 +20,18 @@ export default class Members {
     const db = this.client.db(this.dbName);
     const collection = db.collection<IDiscordMember>(this.collName);
 
-    const cursor = collection.find();
+    const cursor = collection.aggregate([
+      {
+        $lookup: {
+          from: 'roles',
+          localField: 'roles',
+          foreignField: 'id',
+          as: 'roles',
+        },
+      },
+    ]);
 
-    const data: IDiscordMember[] = [];
+    const data: any[] = [];
     await cursor.forEach((mem) => {
       data.push({ ...mem });
     });
