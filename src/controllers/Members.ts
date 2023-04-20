@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import MembersModel from '../models/Members';
 
 type QueryParams = {
-  start: number;
-  end: number;
+  page: number;
+  numPerPage: number;
 };
 
 class Members {
@@ -12,8 +12,10 @@ class Members {
     res: Response
   ): Promise<Response> {
     try {
-      const data = await MembersModel.findAll();
-      return res.status(200).json({ msg: 'ok', data });
+      const page = Number(req.query.page) || 1;
+      const numPerPage = Number(req.query.numPerPage) || 100;
+      const data = await MembersModel.findAll({ page, numPerPage });
+      return res.status(200).json({ msg: 'ok', ...data });
     } catch (e) {
       console.log(e);
       return res.status(500).json({ msg: 'Internal server error' });

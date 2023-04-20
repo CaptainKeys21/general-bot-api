@@ -2,7 +2,7 @@ import { Long } from 'mongodb';
 
 export interface IDiscordUser {
   id: string;
-  avatar: string;
+  avatar: string | null;
   bot: boolean;
   discriminator: string;
   username: string;
@@ -17,7 +17,7 @@ export interface IDiscordMember {
   joined_at: Date;
   mute: boolean;
   nick: string | null;
-  roles: string[];
+  roles: IDiscordRole[];
   user: IDiscordUser;
   pending: boolean;
   premium_since: Date | null;

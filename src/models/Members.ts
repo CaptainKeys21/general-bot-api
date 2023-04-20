@@ -1,6 +1,7 @@
 import { ChangeStream, MongoClient } from 'mongodb';
 import client from '../services/database';
 import { IDiscordMember } from '../types/Discord';
+import { PagedData, PaginationParams } from '../types/Models';
 
 export default class Members {
   private static readonly dbName = 'GeneralBot';
@@ -16,11 +17,13 @@ export default class Members {
     return membersStream;
   }
 
-  static async findAll(_pagination?: [number, number]): Promise<IDiscordMember[]> {
+  static async findAll(pagination: PaginationParams): Promise<PagedData<IDiscordMember[]>> {
     const db = this.client.db(this.dbName);
     const collection = db.collection<IDiscordMember>(this.collName);
 
-    const cursor = collection.aggregate([
+    const { page, numPerPage = 100 } = pagination;
+
+    const cursor = collection.aggregate<PagedData<IDiscordMember[]>>([
       {
         $lookup: {
           from: 'roles',
@@ -29,12 +32,24 @@ export default class Members {
           as: 'roles',
         },
       },
+      {
+        $facet: {
+          metadata: [
+            { $count: 'total' },
+            {
+              $addFields: {
+                page,
+                totalPages: { $ceil: { $divide: ['$total', numPerPage] } },
+              },
+            },
+          ],
+          data: [{ $limit: numPerPage }, { $skip: (page - 1) * numPerPage }],
+        },
+      },
+      { $unwind: '$metadata' },
     ]);
 
-    const data: any[] = [];
-    await cursor.forEach((mem) => {
-      data.push({ ...mem });
-    });
+    const data: PagedData<IDiscordMember[]> = (await cursor.toArray())[0];
 
     return data;
   }
