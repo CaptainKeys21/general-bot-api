@@ -53,4 +53,26 @@ export default class Members {
 
     return data;
   }
+
+  static async findOne(id: string): Promise<IDiscordMember | null> {
+    const db = this.client.db(this.dbName);
+    const collection = db.collection<IDiscordMember>(this.collName);
+
+    const cursor = collection.aggregate<IDiscordMember>([
+      { $match: { 'user.id': id } },
+      {
+        $lookup: {
+          from: 'roles',
+          localField: 'roles',
+          foreignField: 'id',
+          as: 'roles',
+        },
+      },
+    ]);
+    const result = await cursor.toArray();
+
+    if (!result.length) return null;
+
+    return result[0];
+  }
 }
