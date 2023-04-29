@@ -2,10 +2,15 @@ export interface IGeneralConfig {
   name: string;
   config_type: string;
   data?: string;
+  label?: string;
 }
 
 export interface IKeynamedGeneralConfig {
-  [k: string]: { config_type: string; data?: string | undefined };
+  [k: string]: {
+    config_type: string;
+    data?: string;
+    label?: string;
+  };
 }
 
 export interface ICommandAllowedIdsConfig {

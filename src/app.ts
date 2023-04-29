@@ -1,5 +1,6 @@
 import express, { Application, urlencoded } from 'express';
 import http, { createServer, IncomingMessage, ServerResponse } from 'http';
+import cors from 'cors';
 import * as dotenv from 'dotenv';
 
 import { Server } from 'socket.io';
@@ -27,10 +28,7 @@ class App {
   private middlewares(): void {
     this.app.use(urlencoded({ extended: true }));
     this.app.use(express.json());
-    // this.app.use((req: IoRequest, _res, next) => {
-    //   req.io = this.io;
-    //   return next();
-    // });
+    this.app.use(cors());
   }
 
   private routes(): void {

@@ -22,6 +22,7 @@ export default class GeneralConfigModel {
         data.set(conf.name, {
           config_type: conf.config_type,
           data: conf.data,
+          label: conf.label,
         });
       });
 
