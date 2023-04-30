@@ -4,6 +4,7 @@ import LoggerModel from '../models/Logger';
 type QueryParams = {
   page?: number;
   pageSize?: number;
+  category?: string | string[];
 };
 
 class Logger {
@@ -12,15 +13,29 @@ class Logger {
     res: Response
   ): Promise<Response> {
     try {
-      const params = req.query;
+      const { page = 1, category = 'all', pageSize } = req.query;
+
+      if (!(await LoggerModel.checkCategory(category))) {
+        return res.status(400).json({ msg: 'category not supported' });
+      }
 
       const data = await LoggerModel.find({
-        filter: 'all',
-        page: Number(params.page || 1),
-        numPerPage: params.pageSize ? Number(params.pageSize) : undefined,
+        filter: category,
+        page: Number(page),
+        numPerPage: pageSize ? Number(pageSize) : undefined,
       });
 
       return res.status(200).json({ msg: 'ok', ...data });
+    } catch (e) {
+      console.log(e);
+      return res.status(500).json({ msg: 'Internal server error' });
+    }
+  }
+
+  async types(req: Request, res: Response): Promise<Response> {
+    try {
+      const data = await LoggerModel.getAllCollectionNames();
+      return res.status(200).json({ msg: 'ok', data });
     } catch (e) {
       console.log(e);
       return res.status(500).json({ msg: 'Internal server error' });

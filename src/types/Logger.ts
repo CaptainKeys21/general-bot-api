@@ -1,14 +1,23 @@
 import { Long } from 'mongodb';
 import { IDiscordUser } from './Discord';
 
-export type AllLogs = ICommandLog | ISlashCommand;
+export type AllLogs = ICommandLog;
 
-export interface ICommandLog {
+interface IBaseLog {
   logType: string;
-  author: IDiscordUser;
-  command: ISlashCommand;
+  category: string;
   message: string;
   time: Date;
+}
+
+export interface ICommandLog extends IBaseLog {
+  author: IDiscordUser;
+  command: ISlashCommand | IPrefixCommand;
+}
+
+export interface IPrefixCommand {
+  name: string;
+  args: string[];
 }
 
 export interface ISlashCommand {

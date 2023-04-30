@@ -2,9 +2,8 @@ import { ChangeStream, Collection, Document, MongoClient } from 'mongodb';
 import client from '../services/database';
 import { AllLogs } from '../types/Logger';
 
-type filterType = 'all' | 'default' | 'commands';
 type findParams = {
-  filter: filterType;
+  filter: string | string[];
   page: number;
   numPerPage?: number;
 };
@@ -22,23 +21,46 @@ export default class Logger {
   private static readonly client: MongoClient = client;
 
   static async find(params: findParams): Promise<returnFind> {
+    const { filter, page, numPerPage } = params;
+    const parsedFilter = filter === 'all' ? await this.getAllCollectionNames() : filter;
+
     const db = client.db(this.dbName);
-    const coll = db.collection('commands');
+    const mainCollName = Array.isArray(parsedFilter)
+      ? (parsedFilter.shift() as string)
+      : parsedFilter;
+
+    const mainColl = db.collection(mainCollName);
+
+    const pipeline: Document[] = [{ $set: { category: mainCollName } }];
+
+    Array.isArray(parsedFilter) &&
+      parsedFilter.forEach((val) =>
+        pipeline.push({
+          $unionWith: {
+            coll: val,
+            pipeline: [{ $set: { category: val } }],
+          },
+        })
+      );
+
+    pipeline.push({ $sort: { time: -1 } });
 
     const facetData: { [key: string]: number }[] = [];
-    params.numPerPage && facetData.push({ $limit: params.numPerPage });
-    params.numPerPage && facetData.push({ $skip: (params.page - 1) * params.numPerPage });
+    numPerPage && facetData.push({ $limit: numPerPage });
+    numPerPage && facetData.push({ $skip: (page - 1) * numPerPage });
 
-    const cursor = coll.aggregate<returnFind>([
-      { $sort: { time: -1 } },
+    pipeline.push(
       {
         $facet: {
-          metadata: [{ $count: 'total' }, { $addFields: { page: params.page } }],
+          metadata: [{ $count: 'total' }, { $addFields: { page: page } }],
           data: facetData,
         },
       },
-      { $unwind: '$metadata' },
-    ]);
+      { $unwind: '$metadata' }
+    );
+
+    console.log(pipeline);
+    const cursor = mainColl.aggregate<returnFind>(pipeline);
 
     const data: returnFind = (await cursor.toArray())[0];
 
@@ -63,5 +85,19 @@ export default class Logger {
     }
 
     return streamMap;
+  }
+
+  static async checkCategory(types: string | string[]): Promise<boolean> {
+    if (types === 'all') return true;
+
+    const collNames = await this.getAllCollectionNames();
+    return Array.isArray(types)
+      ? types.every((val) => collNames.includes(val))
+      : collNames.includes(types);
+  }
+
+  static async getAllCollectionNames(): Promise<string[]> {
+    const db = this.client.db(this.dbName);
+    return (await db.listCollections().toArray()).map((val) => val.name);
   }
 }
