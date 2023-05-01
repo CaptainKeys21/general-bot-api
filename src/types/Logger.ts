@@ -6,7 +6,7 @@ export type AllLogs = ICommandLog;
 interface IBaseLog {
   logType: string;
   category: string;
-  message: string;
+  message?: string;
   time: Date;
 }
 

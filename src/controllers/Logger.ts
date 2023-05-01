@@ -32,7 +32,7 @@ class Logger {
     }
   }
 
-  async types(req: Request, res: Response): Promise<Response> {
+  async categories(req: Request, res: Response): Promise<Response> {
     try {
       const data = await LoggerModel.getAllCollectionNames();
       return res.status(200).json({ msg: 'ok', data });

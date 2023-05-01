@@ -45,10 +45,10 @@ export default class Logger {
 
     pipeline.push({ $sort: { time: -1 } });
 
-    const facetData: { [key: string]: number }[] = [];
-    numPerPage && facetData.push({ $limit: numPerPage });
+    const facetData: Document[] = [];
     numPerPage && facetData.push({ $skip: (page - 1) * numPerPage });
-
+    numPerPage && facetData.push({ $limit: numPerPage });
+    console.log(facetData);
     pipeline.push(
       {
         $facet: {
@@ -59,7 +59,6 @@ export default class Logger {
       { $unwind: '$metadata' }
     );
 
-    console.log(pipeline);
     const cursor = mainColl.aggregate<returnFind>(pipeline);
 
     const data: returnFind = (await cursor.toArray())[0];
