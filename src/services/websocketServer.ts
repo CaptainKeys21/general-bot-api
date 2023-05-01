@@ -1,12 +1,10 @@
 import { Server, Socket } from 'socket.io';
 import htpp, { IncomingMessage, ServerResponse } from 'http';
-import { createAdapter } from '@socket.io/mongo-adapter';
 import Logger from '../models/Logger';
 import Members from '../models/Members';
 
 export default class WebSocketServer {
   readonly server: Server;
-  private readonly LoggerModel = Logger;
 
   constructor(htppServer: htpp.Server<typeof IncomingMessage, typeof ServerResponse>) {
     this.server = new Server(htppServer, {

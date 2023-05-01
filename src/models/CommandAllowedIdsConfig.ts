@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import client from '../services/database';
-import { IAllowedData, ICommandAllowedIdsConfig, IKeynamedCAIConfig } from '../types/Config';
+import { AllowedData, CommandAllowedIdsConfig, KeynamedCAIConfig } from '../types/Config';
 
 export default class CommandAllowedIdsConfigModel {
   private static readonly dbName = 'GeneralBot';
@@ -9,11 +9,9 @@ export default class CommandAllowedIdsConfigModel {
 
   private static readonly client: MongoClient = client;
 
-  static async findAll(
-    keyname?: boolean
-  ): Promise<ICommandAllowedIdsConfig[] | IKeynamedCAIConfig> {
+  static async findAll(keyname?: boolean): Promise<CommandAllowedIdsConfig[] | KeynamedCAIConfig> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<ICommandAllowedIdsConfig>(this.collName);
+    const collection = db.collection<CommandAllowedIdsConfig>(this.collName);
 
     const cursor = collection.find({ config_type: this.config_type }, { projection: { _id: 0 } });
 
@@ -30,16 +28,16 @@ export default class CommandAllowedIdsConfigModel {
       return Object.fromEntries(data);
     }
 
-    const data: ICommandAllowedIdsConfig[] = [];
+    const data: CommandAllowedIdsConfig[] = [];
     await cursor.forEach((conf) => {
       data.push(conf);
     });
 
     return data;
   }
-  static async findOne(name: string): Promise<ICommandAllowedIdsConfig | null> {
+  static async findOne(name: string): Promise<CommandAllowedIdsConfig | null> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<ICommandAllowedIdsConfig>(this.collName);
+    const collection = db.collection<CommandAllowedIdsConfig>(this.collName);
 
     const data = await collection.findOne(
       { config_type: this.config_type, name },
@@ -49,18 +47,18 @@ export default class CommandAllowedIdsConfigModel {
     return data;
   }
 
-  static async insertOne(data: ICommandAllowedIdsConfig): Promise<string> {
+  static async insertOne(data: CommandAllowedIdsConfig): Promise<string> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<ICommandAllowedIdsConfig>(this.collName);
+    const collection = db.collection<CommandAllowedIdsConfig>(this.collName);
 
     const result = await collection.insertOne(data);
 
     return result.insertedId.toString();
   }
 
-  static async editOne(name: string, data?: IAllowedData): Promise<boolean> {
+  static async editOne(name: string, data?: AllowedData): Promise<boolean> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<ICommandAllowedIdsConfig>(this.collName);
+    const collection = db.collection<CommandAllowedIdsConfig>(this.collName);
 
     const result = await collection.updateOne(
       { config_type: this.config_type, name },
@@ -72,7 +70,7 @@ export default class CommandAllowedIdsConfigModel {
 
   static async deleteOne(name: string): Promise<boolean> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<ICommandAllowedIdsConfig>(this.collName);
+    const collection = db.collection<CommandAllowedIdsConfig>(this.collName);
 
     const result = await collection.deleteOne({ config_type: this.config_type, name });
 

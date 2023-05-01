@@ -1,11 +1,11 @@
-export interface IGeneralConfig {
+export interface GeneralConfig {
   name: string;
   config_type: string;
   data?: string;
   label?: string;
 }
 
-export interface IKeynamedGeneralConfig {
+export interface KeynamedGeneralConfig {
   [k: string]: {
     config_type: string;
     data?: string;
@@ -13,7 +13,7 @@ export interface IKeynamedGeneralConfig {
   };
 }
 
-export interface ICommandAllowedIdsConfig {
+export interface CommandAllowedIdsConfig {
   name: string;
   config_type: string;
   allowed: {
@@ -22,14 +22,14 @@ export interface ICommandAllowedIdsConfig {
   };
 }
 
-export interface IKeynamedCAIConfig {
+export interface KeynamedCAIConfig {
   [k: string]: {
     config_type: string;
-    allowed: IAllowedData;
+    allowed: AllowedData;
   };
 }
 
-export interface IAllowedData {
+export interface AllowedData {
   users: string[];
   roles: string[];
 }

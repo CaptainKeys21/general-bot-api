@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import client from '../services/database';
-import { IGeneralConfig, IKeynamedGeneralConfig } from '../types/Config';
+import { GeneralConfig, KeynamedGeneralConfig } from '../types/Config';
 
 export default class GeneralConfigModel {
   private static readonly dbName = 'GeneralBot';
@@ -9,9 +9,9 @@ export default class GeneralConfigModel {
 
   private static readonly client: MongoClient = client;
 
-  static async findAll(keyname?: boolean): Promise<IGeneralConfig[] | IKeynamedGeneralConfig> {
+  static async findAll(keyname?: boolean): Promise<GeneralConfig[] | KeynamedGeneralConfig> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<IGeneralConfig>(this.collName);
+    const collection = db.collection<GeneralConfig>(this.collName);
 
     const cursor = collection.find({ config_type: this.config_type }, { projection: { _id: 0 } });
 
@@ -29,16 +29,16 @@ export default class GeneralConfigModel {
       return Object.fromEntries(data);
     }
 
-    const data: IGeneralConfig[] = [];
+    const data: GeneralConfig[] = [];
     await cursor.forEach((conf) => {
       data.push(conf);
     });
 
     return data;
   }
-  static async findOne(name: string): Promise<IGeneralConfig | null> {
+  static async findOne(name: string): Promise<GeneralConfig | null> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<IGeneralConfig>(this.collName);
+    const collection = db.collection<GeneralConfig>(this.collName);
 
     const data = await collection.findOne(
       { config_type: this.config_type, name },
@@ -48,9 +48,9 @@ export default class GeneralConfigModel {
     return data;
   }
 
-  static async insertOne(data: IGeneralConfig): Promise<string> {
+  static async insertOne(data: GeneralConfig): Promise<string> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<IGeneralConfig>(this.collName);
+    const collection = db.collection<GeneralConfig>(this.collName);
 
     const result = await collection.insertOne(data);
 
@@ -59,7 +59,7 @@ export default class GeneralConfigModel {
 
   static async editOne(name: string, data?: string): Promise<boolean> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<IGeneralConfig>(this.collName);
+    const collection = db.collection<GeneralConfig>(this.collName);
 
     const result = await collection.updateOne(
       { config_type: this.config_type, name },
@@ -71,7 +71,7 @@ export default class GeneralConfigModel {
 
   static async deleteOne(name: string): Promise<boolean> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<IGeneralConfig>(this.collName);
+    const collection = db.collection<GeneralConfig>(this.collName);
 
     const result = await collection.deleteOne({ config_type: this.config_type, name });
 

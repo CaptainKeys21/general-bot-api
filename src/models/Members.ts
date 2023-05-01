@@ -1,6 +1,6 @@
 import { ChangeStream, MongoClient } from 'mongodb';
 import client from '../services/database';
-import { IDiscordMember } from '../types/Discord';
+import { DiscordMember } from '../types/Discord';
 import { PagedData, PaginationParams } from '../types/Models';
 
 export default class Members {
@@ -11,19 +11,19 @@ export default class Members {
 
   static async getChangeSet(): Promise<ChangeStream> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<IDiscordMember>(this.collName);
+    const collection = db.collection<DiscordMember>(this.collName);
     const membersStream = collection.watch();
 
     return membersStream;
   }
 
-  static async findAll(pagination: PaginationParams): Promise<PagedData<IDiscordMember[]>> {
+  static async findAll(pagination: PaginationParams): Promise<PagedData<DiscordMember[]>> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<IDiscordMember>(this.collName);
+    const collection = db.collection<DiscordMember>(this.collName);
 
     const { page, numPerPage = 100 } = pagination;
 
-    const cursor = collection.aggregate<PagedData<IDiscordMember[]>>([
+    const cursor = collection.aggregate<PagedData<DiscordMember[]>>([
       {
         $lookup: {
           from: 'roles',
@@ -49,16 +49,16 @@ export default class Members {
       { $unwind: '$metadata' },
     ]);
 
-    const data: PagedData<IDiscordMember[]> = (await cursor.toArray())[0];
+    const data: PagedData<DiscordMember[]> = (await cursor.toArray())[0];
 
     return data;
   }
 
-  static async findOne(id: string): Promise<IDiscordMember | null> {
+  static async findOne(id: string): Promise<DiscordMember | null> {
     const db = this.client.db(this.dbName);
-    const collection = db.collection<IDiscordMember>(this.collName);
+    const collection = db.collection<DiscordMember>(this.collName);
 
-    const cursor = collection.aggregate<IDiscordMember>([
+    const cursor = collection.aggregate<DiscordMember>([
       { $match: { 'user.id': id } },
       {
         $lookup: {
