@@ -11,21 +11,18 @@ export default class WebSocketServer {
       cors: { origin: '*' },
       allowEIO3: true,
     });
-    // this.LoggerModel.getAllCollections().then((collections) =>
-    //   collections.forEach((coll) => this.server.adapter(createAdapter(coll)))
-    // );
 
     this.namespaces();
   }
 
   private namespaces() {
     this.server.of('/logger').on('connection', this.loggerEmitters);
+    this.server.of('/logger/messages').on('connection', this.loggerMessageEmitter);
     this.server.of('/members').on('connection', this.memberEmitters);
   }
 
   private async loggerEmitters(socket: Socket) {
     const streamMap = await Logger.getChangeSets();
-
     for (const [key, value] of streamMap) {
       value.on('change', (next) => {
         if (next.operationType === 'insert') {
@@ -33,6 +30,21 @@ export default class WebSocketServer {
         }
       });
     }
+  }
+
+  private async loggerMessageEmitter(socket: Socket) {
+    const userId = socket.handshake.query.userId;
+    if (!userId || typeof userId !== 'string') {
+      socket.disconnect();
+      return;
+    }
+
+    const stream = await Logger.getMemberMessagesChangeSet(userId);
+    stream.on('change', (next) => {
+      if (next.operationType === 'insert') {
+        socket.emit(`message:${userId}`, next.fullDocument);
+      }
+    });
   }
 
   private async memberEmitters(socket: Socket) {

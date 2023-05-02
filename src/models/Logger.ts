@@ -78,12 +78,21 @@ export default class Logger {
     const cursor = db.listCollections();
 
     for await (const info of cursor) {
-      const collCommands = db.collection(info.name);
-      const commandsStream = collCommands.watch();
+      const collection = db.collection(info.name);
+      const commandsStream = collection.watch();
       streamMap.set(info.name, commandsStream);
     }
 
     return streamMap;
+  }
+
+  static async getMemberMessagesChangeSet(userId: string): Promise<ChangeStream> {
+    const db = this.client.db(this.dbName);
+    const collection = db.collection('messages');
+    return collection.watch([
+      { $match: { operationType: 'insert' } },
+      { $match: { 'fullDocument.data.author.id': userId } },
+    ]);
   }
 
   static async checkCategory(types: string | string[]): Promise<boolean> {
