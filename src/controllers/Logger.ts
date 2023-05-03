@@ -7,6 +7,10 @@ type QueryParams = {
   category?: string | string[];
 };
 
+type Params = {
+  id: string;
+};
+
 class Logger {
   async index(
     req: Request<unknown, unknown, unknown, QueryParams>,
@@ -24,6 +28,23 @@ class Logger {
         page: Number(page),
         numPerPage: pageSize ? Number(pageSize) : undefined,
       });
+
+      return res.status(200).json({ msg: 'ok', ...data });
+    } catch (e) {
+      console.log(e);
+      return res.status(500).json({ msg: 'Internal server error' });
+    }
+  }
+
+  async messagesByUserId(
+    req: Request<Params, unknown, unknown, QueryParams>,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const { id } = req.params;
+      const { page = 1, pageSize } = req.query;
+
+      const data = await LoggerModel.findMessagesByUserId(id, { page, numPerPage: pageSize });
 
       return res.status(200).json({ msg: 'ok', ...data });
     } catch (e) {

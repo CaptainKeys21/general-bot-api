@@ -1,12 +1,16 @@
-import { DiscordUser, InteractionType } from './Discord';
+import { DiscordMessage, DiscordUser, InteractionType } from './Discord';
 
-export type AllLogs = CommandLog;
+export type AllLogs = CommandLog | MessageLog;
 
 interface BaseLog {
   logType: string;
   category: string;
   message?: string;
   time: Date;
+}
+
+export interface MessageLog extends BaseLog {
+  data: DiscordMessage;
 }
 
 export interface CommandLog extends BaseLog {

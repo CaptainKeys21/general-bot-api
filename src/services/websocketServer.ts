@@ -17,7 +17,7 @@ export default class WebSocketServer {
 
   private namespaces() {
     this.server.of('/logger').on('connection', this.loggerEmitters);
-    this.server.of('/logger/messages').on('connection', this.loggerMessageEmitter);
+    this.server.of(/^\/logger\/\d{18}/).on('connection', this.loggerMessageEmitter);
     this.server.of('/members').on('connection', this.memberEmitters);
   }
 
@@ -33,8 +33,9 @@ export default class WebSocketServer {
   }
 
   private async loggerMessageEmitter(socket: Socket) {
-    const userId = socket.handshake.query.userId;
-    if (!userId || typeof userId !== 'string') {
+    const userId = socket.nsp.name.split('/').pop();
+
+    if (!userId) {
       socket.disconnect();
       return;
     }
@@ -42,7 +43,7 @@ export default class WebSocketServer {
     const stream = await Logger.getMemberMessagesChangeSet(userId);
     stream.on('change', (next) => {
       if (next.operationType === 'insert') {
-        socket.emit(`message:${userId}`, next.fullDocument);
+        socket.emit('message', next.fullDocument);
       }
     });
   }

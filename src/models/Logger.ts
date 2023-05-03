@@ -1,26 +1,18 @@
 import { ChangeStream, Collection, Document, MongoClient } from 'mongodb';
 import client from '../services/database';
-import { AllLogs } from '../types/Logger';
+import { AllLogs, MessageLog } from '../types/Logger';
+import { PaginationParams } from '../types/Models';
+import { PagedData } from '../types/Models';
 
 type findParams = {
   filter: string | string[];
-  page: number;
-  numPerPage?: number;
-};
-
-type returnFind = {
-  metadata: {
-    total: number;
-    page: number;
-  }[];
-  data: AllLogs[];
-};
+} & PaginationParams;
 
 export default class Logger {
   private static readonly dbName = 'Logger';
   private static readonly client: MongoClient = client;
 
-  static async find(params: findParams): Promise<returnFind> {
+  static async find(params: findParams): Promise<PagedData<AllLogs[]>> {
     const { filter, page, numPerPage } = params;
     const parsedFilter = filter === 'all' ? await this.getAllCollectionNames() : filter;
 
@@ -45,23 +37,35 @@ export default class Logger {
 
     pipeline.push({ $sort: { time: -1 } });
 
-    const facetData: Document[] = [];
-    numPerPage && facetData.push({ $skip: (page - 1) * numPerPage });
-    numPerPage && facetData.push({ $limit: numPerPage });
-    console.log(facetData);
-    pipeline.push(
-      {
-        $facet: {
-          metadata: [{ $count: 'total' }, { $addFields: { page: page } }],
-          data: facetData,
-        },
-      },
-      { $unwind: '$metadata' }
-    );
+    const pagination = this.makePaginationPipeline(page, numPerPage);
+    const finalPipeline = pipeline.concat(pagination);
 
-    const cursor = mainColl.aggregate<returnFind>(pipeline);
+    const cursor = mainColl.aggregate<PagedData<AllLogs[]>>(finalPipeline);
 
-    const data: returnFind = (await cursor.toArray())[0];
+    const data: PagedData<AllLogs[]> = (await cursor.toArray())[0];
+
+    return data;
+  }
+
+  static async findMessagesByUserId(
+    userId: string,
+    pagination: PaginationParams
+  ): Promise<PagedData<MessageLog[]>> {
+    const db = client.db(this.dbName);
+    const collection = db.collection('messages');
+
+    const pipeline: Document[] = [
+      { $match: { 'data.author.id': userId } },
+      { $sort: { time: -1 } },
+    ];
+
+    const { page, numPerPage } = pagination;
+    const paginationStep = this.makePaginationPipeline(page, numPerPage);
+    const finalPipeline = pipeline.concat(paginationStep);
+
+    const cursor = collection.aggregate<PagedData<MessageLog[]>>(finalPipeline);
+
+    const data: PagedData<MessageLog[]> = (await cursor.toArray())[0];
 
     return data;
   }
@@ -107,5 +111,23 @@ export default class Logger {
   static async getAllCollectionNames(): Promise<string[]> {
     const db = this.client.db(this.dbName);
     return (await db.listCollections().toArray()).map((val) => val.name);
+  }
+
+  private static makePaginationPipeline(page: number, numPerPage?: number): Document[] {
+    const facetData: Document[] = [];
+    numPerPage && facetData.push({ $skip: (page - 1) * numPerPage });
+    numPerPage && facetData.push({ $limit: numPerPage });
+
+    const pipeline = [
+      {
+        $facet: {
+          metadata: [{ $count: 'total' }, { $addFields: { page: page } }],
+          data: facetData,
+        },
+      },
+      { $unwind: '$metadata' },
+    ];
+
+    return pipeline;
   }
 }
