@@ -30,6 +30,8 @@ export default class WebSocketServer {
         }
       });
     }
+
+    socket.on('disconnect', async () => streamMap.forEach(async (stream) => await stream.close()));
   }
 
   private async loggerMessageEmitter(socket: Socket) {
@@ -40,12 +42,14 @@ export default class WebSocketServer {
       return;
     }
 
-    const stream = await Logger.getMemberMessagesChangeSet(userId);
-    stream.on('change', (next) => {
+    const changeSet = await Logger.getMemberMessagesChangeSet(userId);
+    changeSet.on('change', (next) => {
       if (next.operationType === 'insert') {
         socket.emit('message', next.fullDocument);
       }
     });
+
+    socket.on('disconnect', async () => await changeSet.close());
   }
 
   private async memberEmitters(socket: Socket) {

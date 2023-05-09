@@ -125,7 +125,7 @@ export interface DiscordAttachment {
   size: number;
   url: string;
   width: number | null;
-  content_type: number | null;
+  content_type: string | null;
   ephemeral: boolean;
 }
 
