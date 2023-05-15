@@ -10,6 +10,7 @@ import ConfigRoutes from './routes/config/';
 import MembersRoutes from './routes/members';
 import LoggerRoutes from './routes/logger';
 import RolesRoutes from './routes/roles';
+import UtilityRoutes from './routes/utilities';
 
 class App {
   readonly app: Application;
@@ -36,6 +37,7 @@ class App {
     this.app.use('/members/', MembersRoutes);
     this.app.use('/logger/', LoggerRoutes);
     this.app.use('/roles/', RolesRoutes);
+    this.app.use('/utilities/', UtilityRoutes);
   }
 }
 

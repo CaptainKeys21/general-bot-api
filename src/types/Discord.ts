@@ -45,6 +45,59 @@ export interface DiscordRole {
   unicode_emoji: string | null;
 }
 
+export interface DiscordChannel {
+  id: string;
+  bitrate: number | null;
+  parent_id: string | null;
+  guild_id: string;
+  kind: ChannelType;
+  last_message_id: string | null;
+  last_pin_timestamp: string | null;
+  name: string;
+  permission_overwrites: PermissionOverwrite[];
+  position: number;
+  topic: string | null;
+  user_limit: number | null;
+  nsfw: boolean;
+  rate_limit_per_user: number | null;
+  rtc_region: string | null;
+  video_quality_mode: VideoQualityMode;
+  message_count: number | null;
+  member_count: number | null;
+  thread_metadata: ThreadMetadata | null;
+  member: ThreadMember | null;
+  default_auto_archive_duration: number | null;
+}
+
+export interface ThreadMember {
+  id: string | null;
+  user_id: string | null;
+  join_timestamp: string;
+  flags: string;
+}
+
+export interface ThreadMetadata {
+  archived: boolean;
+  auto_archive_duration: number | null;
+  archive_timestamp: string | null;
+  locked: boolean;
+  create_timestamp: string | null;
+  invitable: boolean;
+}
+
+export enum VideoQualityMode {
+  Auto,
+  Full,
+  Unknown,
+}
+
+export interface PermissionOverwrite {
+  allow: string;
+  deny: string;
+  id: string;
+  type: string;
+}
+
 export interface DiscordMessage {
   id: string;
   attachments: DiscordAttachment[];
