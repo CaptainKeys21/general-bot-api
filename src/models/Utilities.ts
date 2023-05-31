@@ -1,5 +1,6 @@
 import { MongoClient } from 'mongodb';
 import client from '../services/database';
+import { DiscordEmoji } from '../types/Discord';
 
 interface IdNames {
   [k: string]: string | ExtraData;
@@ -26,7 +27,7 @@ export default class Utilities {
           _id: false,
           id: '$user.id',
           value: {
-            $cond: [{ $ne: ['$nick', null] }, '$nick', '$user.username'],
+            $cond: [{ $ne: ['$nick', null] }, { name: '$nick' }, { name: '$user.username' }],
           },
         },
       },
@@ -54,6 +55,31 @@ export default class Utilities {
     ]);
 
     const data: IdNames = (await cursor.toArray())[0];
+    return data;
+  }
+
+  static async findEmojisById(ids: string[]): Promise<DiscordEmoji[]> {
+    const parsedIds = ids.map((val) => {
+      const split = val.split(':');
+      return {
+        animated: Boolean(split[0]),
+        name: split[1],
+        id: split[2],
+      };
+    });
+
+    const db = this.client.db(this.dbName);
+    const coll = db.collection<DiscordEmoji>('emojis');
+
+    const cursor = coll.find({
+      $and: [
+        { id: { $in: parsedIds.map((data) => data.id) } },
+        { name: { $in: parsedIds.map((data) => data.name) } },
+      ],
+    });
+
+    const data = await cursor.toArray();
+
     return data;
   }
 }

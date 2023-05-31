@@ -69,6 +69,17 @@ export interface DiscordChannel {
   default_auto_archive_duration: number | null;
 }
 
+export interface DiscordEmoji {
+  animated: boolean;
+  available: boolean;
+  id: string;
+  name: string;
+  managed: boolean;
+  require_colons: boolean;
+  roles: DiscordRole[];
+  user: DiscordUser | null;
+}
+
 export interface ThreadMember {
   id: string | null;
   user_id: string | null;
