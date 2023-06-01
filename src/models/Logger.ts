@@ -1,19 +1,20 @@
 import { ChangeStream, Collection, Document, MongoClient } from 'mongodb';
 import client from '../services/database';
 import { AllLogs, MessageLog } from '../types/Logger';
-import { PaginationParams } from '../types/Models';
+import { DateParams, PaginationParams } from '../types/Models';
 import { PagedData } from '../types/Models';
 
 type findParams = {
   filter: string | string[];
-} & PaginationParams;
+} & PaginationParams &
+  DateParams;
 
 export default class Logger {
   private static readonly dbName = 'Logger';
   private static readonly client: MongoClient = client;
 
   static async find(params: findParams): Promise<PagedData<AllLogs[]>> {
-    const { filter, page, numPerPage } = params;
+    const { filter, page, numPerPage, dateInitial, dateFinal } = params;
     const parsedFilter = filter === 'all' ? await this.getAllCollectionNames() : filter;
 
     const db = client.db(this.dbName);
@@ -23,24 +24,25 @@ export default class Logger {
 
     const mainColl = db.collection(mainCollName);
 
-    const pipeline: Document[] = [{ $set: { category: mainCollName } }];
+    const datePipeline = this.makeDatePipeLine(dateInitial, dateFinal);
+    const pipeline: Document[] = [...datePipeline, { $set: { category: mainCollName } }];
 
     Array.isArray(parsedFilter) &&
-      parsedFilter.forEach((val) =>
+      parsedFilter.forEach((val) => {
         pipeline.push({
           $unionWith: {
             coll: val,
-            pipeline: [{ $set: { category: val } }],
+            pipeline: [...datePipeline, { $set: { category: val } }],
           },
-        })
-      );
+        });
+      });
 
     pipeline.push({ $sort: { time: -1 } });
 
     const pagination = this.makePaginationPipeline(page, numPerPage);
-    const finalPipeline = pipeline.concat(pagination);
+    pipeline.push(...pagination);
 
-    const cursor = mainColl.aggregate<PagedData<AllLogs[]>>(finalPipeline);
+    const cursor = mainColl.aggregate<PagedData<AllLogs[]>>(pipeline);
 
     const data: PagedData<AllLogs[]> = (await cursor.toArray())[0];
 
@@ -49,21 +51,23 @@ export default class Logger {
 
   static async findMessagesByUserId(
     userId: string,
-    pagination: PaginationParams
+    pagination: PaginationParams,
+    date: DateParams
   ): Promise<PagedData<MessageLog[]>> {
     const db = client.db(this.dbName);
     const collection = db.collection('messages');
 
-    const pipeline: Document[] = [
-      { $match: { 'data.author.id': userId } },
-      { $sort: { time: -1 } },
-    ];
+    const pipeline: Document[] = [];
+
+    const { dateInitial, dateFinal } = date;
+    pipeline.push(...this.makeDatePipeLine(dateInitial, dateFinal));
+
+    pipeline.push({ $match: { 'data.author.id': userId } }, { $sort: { time: -1 } });
 
     const { page, numPerPage } = pagination;
-    const paginationStep = this.makePaginationPipeline(page, numPerPage);
-    const finalPipeline = pipeline.concat(paginationStep);
+    pipeline.push(...this.makePaginationPipeline(page, numPerPage));
 
-    const cursor = collection.aggregate<PagedData<MessageLog[]>>(finalPipeline);
+    const cursor = collection.aggregate<PagedData<MessageLog[]>>(pipeline);
 
     const data: PagedData<MessageLog[]> = (await cursor.toArray())[0];
 
@@ -111,6 +115,20 @@ export default class Logger {
   static async getAllCollectionNames(): Promise<string[]> {
     const db = this.client.db(this.dbName);
     return (await db.listCollections().toArray()).map((val) => val.name);
+  }
+
+  private static makeDatePipeLine(initial: number, final: number): Document[] {
+    const datePipeline: Document[] = [];
+
+    if (initial || final) {
+      const time = {};
+      initial && Object.defineProperty(time, '$gt', { value: new Date(initial), enumerable: true });
+      final && Object.defineProperty(time, '$lt', { value: new Date(final), enumerable: true });
+
+      datePipeline.push({ $match: { time } });
+    }
+
+    return datePipeline;
   }
 
   private static makePaginationPipeline(page: number, numPerPage?: number): Document[] {

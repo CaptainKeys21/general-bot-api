@@ -9,5 +9,10 @@ export interface PagedData<T> {
 
 export interface PaginationParams {
   page: number;
-  numPerPage?: number;
+  numPerPage: number;
+}
+
+export interface DateParams {
+  dateInitial: number;
+  dateFinal: number;
 }

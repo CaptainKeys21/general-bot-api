@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import LoggerModel from '../models/Logger';
+import { DateParams, PaginationParams } from '../types/Models';
 
 type QueryParams = {
-  page?: number;
-  pageSize?: number;
   category?: string | string[];
-};
+} & Partial<PaginationParams> &
+  Partial<DateParams>;
 
 type Params = {
   id: string;
@@ -17,7 +17,13 @@ class Logger {
     res: Response
   ): Promise<Response> {
     try {
-      const { page = 1, category = 'all', pageSize } = req.query;
+      const {
+        page = 1,
+        category = 'all',
+        numPerPage = 100,
+        dateInitial = 0,
+        dateFinal = 0,
+      } = req.query;
 
       if (!(await LoggerModel.checkCategory(category))) {
         return res.status(400).json({ msg: 'category not supported' });
@@ -26,7 +32,9 @@ class Logger {
       const data = await LoggerModel.find({
         filter: category,
         page: Number(page),
-        numPerPage: pageSize ? Number(pageSize) : undefined,
+        numPerPage: Number(numPerPage),
+        dateInitial: Number(dateInitial),
+        dateFinal: Number(dateFinal),
       });
 
       return res.status(200).json({ msg: 'ok', ...data });
@@ -42,9 +50,13 @@ class Logger {
   ): Promise<Response> {
     try {
       const { id } = req.params;
-      const { page = 1, pageSize } = req.query;
+      const { page = 1, numPerPage = 100, dateInitial = 0, dateFinal = 0 } = req.query;
 
-      const data = await LoggerModel.findMessagesByUserId(id, { page, numPerPage: pageSize });
+      const data = await LoggerModel.findMessagesByUserId(
+        id,
+        { page: Number(page), numPerPage: Number(numPerPage) },
+        { dateInitial: Number(dateInitial), dateFinal: Number(dateFinal) }
+      );
 
       return res.status(200).json({ msg: 'ok', ...data });
     } catch (e) {
