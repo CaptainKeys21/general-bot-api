@@ -43,7 +43,7 @@ export default class Members {
               },
             },
           ],
-          data: [{ $limit: numPerPage }, { $skip: (page - 1) * numPerPage }],
+          data: [{ $skip: (page - 1) * numPerPage }, { $limit: numPerPage }],
         },
       },
       { $unwind: '$metadata' },

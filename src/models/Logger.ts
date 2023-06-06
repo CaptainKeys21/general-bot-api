@@ -139,7 +139,15 @@ export default class Logger {
     const pipeline = [
       {
         $facet: {
-          metadata: [{ $count: 'total' }, { $addFields: { page: page } }],
+          metadata: [
+            { $count: 'total' },
+            {
+              $addFields: {
+                page,
+                totalPages: { $ceil: { $divide: ['$total', numPerPage] } },
+              },
+            },
+          ],
           data: facetData,
         },
       },
