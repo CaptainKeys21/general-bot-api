@@ -26,7 +26,7 @@ export default class WebSocketServer {
     for (const [key, value] of streamMap) {
       value.on('change', (next) => {
         if (next.operationType === 'insert') {
-          socket.emit(key, next.fullDocument);
+          socket.emit(key, { ...next.fullDocument, category: key });
         }
       });
     }

@@ -4,6 +4,7 @@ import MembersModel from '../models/Members';
 type QueryParams = {
   page: number;
   numPerPage: number;
+  search: string;
 };
 
 type Params = {
@@ -18,7 +19,7 @@ class Members {
     try {
       const page = Number(req.query.page) || 1;
       const numPerPage = Number(req.query.numPerPage) || 100;
-      const data = await MembersModel.findAll({ page, numPerPage });
+      const data = await MembersModel.findAll({ page, numPerPage }, req.query.search);
       return res.status(200).json({ msg: 'ok', ...data });
     } catch (e) {
       console.log(e);
